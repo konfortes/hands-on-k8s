@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hands-on-web
+spec:
+  selector:
+    matchLabels:
+      app: hands-on-web
+  template:
+    metadata:
+      labels:
+        app: hands-on-web
+    spec:
+      containers:
+      - name: web
+        env: 
+        - name: PORT
+          value: "4431"
+        image: hands-on-k8s-web:latest
+        imagePullPolicy: Never
+        resources:
+          limits:
+            memory: "32Mi"
+            cpu: "250m"
+          requests:
+            memory: "32Mi"
+            cpu: "250m"
+        ports:
+        - name: http
+          containerPort: 4431
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 4431
+            scheme: HTTP
+          initialDelaySeconds: 120
+          periodSeconds: 20
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 4431
+            scheme: HTTP
+          initialDelaySeconds: 1
+          periodSeconds: 5
+          timeoutSeconds: 2
+          successThreshold: 1
+          failureThreshold: 1

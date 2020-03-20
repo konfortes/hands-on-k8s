@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hands-on-web
+  labels:
+    app: hands-on-web
+spec:
+  selector:
+    app: hands-on-web
+  ports:
+  - port: 4431
+    targetPort: 4431
+    protocol: TCP
+    name: http
