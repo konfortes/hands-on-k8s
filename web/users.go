@@ -15,7 +15,6 @@ type UserInput struct {
 }
 
 func usersHandler(w http.ResponseWriter, req *http.Request) {
-	defer req.Body.Close()
 	userInput := UserInput{}
 	if err := json.NewDecoder(req.Body).Decode(&userInput); err != nil {
 		log.Println(err)

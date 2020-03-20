@@ -7,23 +7,13 @@ import (
 	"os"
 )
 
-var userService UserService
-
 func main() {
-	initialize()
 	http.HandleFunc("/health", health)
 	http.HandleFunc("/users", usersHandler)
 
-	port := getEnvOr("PORT", "4431")
+	port := getEnvOr("PORT", "4432")
 	log.Printf("Listening on %s...\n", port)
 	http.ListenAndServe(":"+port, nil)
-}
-
-func initialize() {
-	// TODO: service discovery
-	userService = UserService{
-		Host: getEnvOr("USER_SERVICE_HOST", "users"),
-	}
 }
 
 func getEnvOr(env, ifNotFound string) string {
