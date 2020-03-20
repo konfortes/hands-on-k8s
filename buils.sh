@@ -1,0 +1,1 @@
+docker build -t hands-on-k8s-web -f web/Dockerfile web
