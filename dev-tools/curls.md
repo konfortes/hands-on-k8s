@@ -1,4 +1,4 @@
-curl -X POST localhost:4431/users \
+curl -i -X POST myapp:80/users \
 -d'{
   "first_name": "Ronen",
   "last_name": "Konfortes",

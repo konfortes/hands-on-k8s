@@ -3,6 +3,8 @@ kind: Deployment
 metadata:
   name: hands-on-web
   namespace: handson
+  annotations:
+    "sidecar.jaegertracing.io/inject": simplest
 spec:
   selector:
     matchLabels:

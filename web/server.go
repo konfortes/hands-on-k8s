@@ -22,7 +22,8 @@ func main() {
 func initialize() {
 	// TODO: service discovery
 	userService = UserService{
-		Host: getEnvOr("USER_SERVICE_HOST", "users"),
+		Host: getEnvOr("HANDS_ON_USER_SERVICE_SERVICE_HOST", "hands-on-user-service"),
+		Port: getEnvOr("HANDS_ON_USER_SERVICE_SERVICE_PORT", "4432"),
 	}
 }
 

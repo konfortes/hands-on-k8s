@@ -4,10 +4,14 @@ metadata:
   name: hands-on-ingress
   namespace: handson
   annotations:
+    # nginx.ingress.kubernetes.io/enable-opentracing: "true"
     nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   rules:
-  - http:
+    # TODO: need to figure out how this ingress and the jaeger ingress (both on port 80) can reside
+    # added 127.0.0.1 myapp to etc/hosts.
+  - host: myapp
+    http:
       paths:
       - path: /
         backend:

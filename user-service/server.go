@@ -9,7 +9,7 @@ import (
 
 func main() {
 	http.HandleFunc("/health", health)
-	http.HandleFunc("/users", usersHandler)
+	http.HandleFunc("/users", handleUsers)
 
 	port := getEnvOr("PORT", "4432")
 	log.Printf("Listening on %s...\n", port)
