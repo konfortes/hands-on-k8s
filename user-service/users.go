@@ -22,8 +22,9 @@ type UserInput struct {
 func handleUsers(w http.ResponseWriter, req *http.Request) {
 	tracer, closer := initJaeger("hands-on-k8s-user-service")
 	defer closer.Close()
-	spanCtx, _ := tracer.Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(req.Header))
-	span := tracer.StartSpan("handleUsers", ext.RPCServerOption(spanCtx))
+
+	upstreamCtx, _ := tracer.Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(req.Header))
+	span := tracer.StartSpan("handleUsers", ext.RPCServerOption(upstreamCtx))
 	defer span.Finish()
 
 	ctx := context.Background()
@@ -64,7 +65,7 @@ func saveUser(ctx context.Context, user UserInput) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "saveUser")
 	defer span.Finish()
 
-	time.Sleep(time.Millisecond * 1500)
+	time.Sleep(time.Millisecond * 1000)
 
 	return nil
 }

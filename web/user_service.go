@@ -22,6 +22,7 @@ type UserService struct {
 // CreateUser ...
 func (us UserService) CreateUser(ctx context.Context, user UserInput) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "UserService#CreateUser")
+	defer span.Finish()
 
 	requestBody, err := json.Marshal(user)
 	if err != nil {
@@ -46,7 +47,6 @@ func (us UserService) CreateUser(ctx context.Context, user UserInput) error {
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{Timeout: time.Second * 10}
-
 	opentracing.GlobalTracer().Inject(
 		span.Context(),
 		opentracing.HTTPHeaders,
