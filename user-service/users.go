@@ -1,9 +1,15 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
+
+	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
+	traceLog "github.com/opentracing/opentracing-go/log"
 )
 
 // UserInput ...
@@ -14,15 +20,51 @@ type UserInput struct {
 }
 
 func handleUsers(w http.ResponseWriter, req *http.Request) {
+	tracer, closer := initJaeger("hands-on-k8s-user-service")
+	defer closer.Close()
+	spanCtx, _ := tracer.Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(req.Header))
+	span := tracer.StartSpan("handleUsers", ext.RPCServerOption(spanCtx))
+	defer span.Finish()
+
+	ctx := context.Background()
+	ctx = opentracing.ContextWithSpan(ctx, span)
+
 	userInput := UserInput{}
-	if err := json.NewDecoder(req.Body).Decode(&userInput); err != nil {
-		log.Println(err)
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Invalid input"))
+	if err := decodeInput(ctx, req, &userInput); err != nil {
+		log.Fatal(err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	log.Printf("persisting user %+v", userInput)
+	if err := saveUser(ctx, userInput); err != nil {
+		log.Fatal(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	w.WriteHeader(http.StatusCreated)
+}
+
+func decodeInput(ctx context.Context, req *http.Request, user *UserInput) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "decodeInput")
+	defer span.Finish()
+
+	if err := json.NewDecoder(req.Body).Decode(user); err != nil {
+		span.LogFields(
+			traceLog.Error(err),
+		)
+		span.SetTag("status", "error")
+		return err
+	}
+
+	return nil
+}
+
+func saveUser(ctx context.Context, user UserInput) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "saveUser")
+	defer span.Finish()
+
+	time.Sleep(time.Millisecond * 1500)
+
+	return nil
 }

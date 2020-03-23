@@ -20,9 +20,9 @@ type UserInput struct {
 }
 
 func usersHandler(w http.ResponseWriter, req *http.Request) {
+	// TODO: can init (and close) globally?
 	tracer, closer := initJaeger("hands-on-k8s-web")
 	defer closer.Close()
-	opentracing.SetGlobalTracer(tracer)
 
 	span := tracer.StartSpan("userHandler")
 	defer span.Finish()
@@ -52,9 +52,12 @@ func decodeInput(ctx context.Context, req *http.Request) (UserInput, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "decodeInput")
 	defer span.Finish()
 
-	span.LogKV("event", "decodeInput")
 	userInput := UserInput{}
 	if err := json.NewDecoder(req.Body).Decode(&userInput); err != nil {
+		span.LogFields(
+			traceLog.Error(err),
+		)
+		span.SetTag("status", "error")
 		return userInput, err
 	}
 
@@ -76,15 +79,16 @@ func processUser(ctx context.Context, user *UserInput) {
 }
 
 func persistUser(ctx context.Context, user UserInput) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "persistUser")
+	span, persistCtx := opentracing.StartSpanFromContext(ctx, "persistUser")
 	defer span.Finish()
 
-	err := userService.CreateUser(user)
+	err := userService.CreateUser(persistCtx, user)
 	if err != nil {
 		span.LogFields(
 			traceLog.String("event", "error"),
 			traceLog.String("value", err.Error()),
 		)
+		span.SetTag("status", "error")
 	}
 	return err
 }
