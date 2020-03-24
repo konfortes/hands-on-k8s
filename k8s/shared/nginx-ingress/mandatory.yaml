@@ -10,9 +10,11 @@ metadata:
 
 kind: ConfigMap
 apiVersion: v1
-# data:
-#   enable-opentracing: "true"
-#   jaeger-collector-host: jaeger-agent.default.svc.cluster.local
+data:
+  enable-opentracing: "true"
+  jaeger-collector-host: localhost
+  jaeger-sampler-type: const
+  jaeger-sampler-param: "1"
 metadata:
   name: nginx-configuration
   namespace: ingress-nginx

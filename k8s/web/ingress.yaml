@@ -4,7 +4,7 @@ metadata:
   name: hands-on-ingress
   namespace: handson
   annotations:
-    # nginx.ingress.kubernetes.io/enable-opentracing: "true"
+    nginx.ingress.kubernetes.io/enable-opentracing: "true"
     nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   rules:
