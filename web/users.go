@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 
+	"github.com/gin-gonic/gin"
 	opentracing "github.com/opentracing/opentracing-go"
 	traceLog "github.com/opentracing/opentracing-go/log"
 )
@@ -16,36 +16,25 @@ import (
 type UserInput struct {
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
-	Email     string `json:"email"`
+	Email     string `json:"email" binding:"required"`
 }
 
-func usersHandler(w http.ResponseWriter, req *http.Request) {
-	// TODO: can init (and close) globally?
-	tracer, closer := initJaeger("hands-on-k8s-web")
-	defer closer.Close()
-
-	span := tracer.StartSpan("userHandler")
-	defer span.Finish()
-	ctx := context.Background()
-	ctx = opentracing.ContextWithSpan(ctx, span)
-
-	userInput, err := decodeInput(ctx, req)
-	if err != nil {
-		log.Fatal(err)
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Invalid input"))
+func usersHandler(c *gin.Context) {
+	var input UserInput
+	if err := c.BindJSON(&input); err != nil {
+		// c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		// TODO: write error to trace?
 		return
 	}
 
-	processUser(ctx, &userInput)
+	processUser(c.Request.Context(), &input)
 
-	if err := persistUser(ctx, userInput); err != nil {
-		log.Fatal(err)
-		w.WriteHeader(http.StatusInternalServerError)
+	if err := persistUser(c.Request.Context(), input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
+	c.JSON(http.StatusOK, gin.H{"status": "created"})
 }
 
 func decodeInput(ctx context.Context, req *http.Request) (UserInput, error) {

@@ -19,6 +19,8 @@ spec:
         env: 
         - name: PORT
           value: "4431"
+        - name: TRACING_ENABLED
+          value: "true"
         image: hands-on-k8s-web:latest
         imagePullPolicy: Never
         resources:
