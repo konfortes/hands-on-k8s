@@ -12,7 +12,10 @@ kind: ConfigMap
 apiVersion: v1
 data:
   enable-opentracing: "true"
-  jaeger-collector-host: localhost
+  # to get the collector (agent) host:
+  # kubectl run --generator=run-pod/v1 --rm utils -it --image eddiehale/utils bash
+  # $ nslookup simplest-agent
+  jaeger-collector-host: 10.1.1.223
   jaeger-sampler-type: const
   jaeger-sampler-param: "1"
 metadata:
