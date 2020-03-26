@@ -2,63 +2,34 @@ package main
 
 import (
 	"context"
-	"encoding/json"
-	"log"
 	"net/http"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	opentracing "github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
-	traceLog "github.com/opentracing/opentracing-go/log"
 )
 
 // UserInput ...
 type UserInput struct {
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
-	Email     string `json:"email"`
+	Email     string `json:"email" binding:"required"`
 }
 
-func handleUsers(w http.ResponseWriter, req *http.Request) {
-	tracer, closer := initJaeger("hands-on-k8s-user-service")
-	defer closer.Close()
-
-	upstreamCtx, _ := tracer.Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(req.Header))
-	span := tracer.StartSpan("handleUsers", ext.RPCServerOption(upstreamCtx))
-	defer span.Finish()
-
-	ctx := context.Background()
-	ctx = opentracing.ContextWithSpan(ctx, span)
-
-	userInput := UserInput{}
-	if err := decodeInput(ctx, req, &userInput); err != nil {
-		log.Fatal(err)
-		w.WriteHeader(http.StatusInternalServerError)
+func usersHandler(c *gin.Context) {
+	var input UserInput
+	if err := c.BindJSON(&input); err != nil {
+		// c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		// TODO: write error to trace?
 		return
 	}
 
-	if err := saveUser(ctx, userInput); err != nil {
-		log.Fatal(err)
-		w.WriteHeader(http.StatusInternalServerError)
+	if err := saveUser(c.Request.Context(), input); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
-}
-
-func decodeInput(ctx context.Context, req *http.Request, user *UserInput) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "decodeInput")
-	defer span.Finish()
-
-	if err := json.NewDecoder(req.Body).Decode(user); err != nil {
-		span.LogFields(
-			traceLog.Error(err),
-		)
-		span.SetTag("status", "error")
-		return err
-	}
-
-	return nil
+	c.JSON(http.StatusOK, gin.H{"status": "created"})
 }
 
 func saveUser(ctx context.Context, user UserInput) error {

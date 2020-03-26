@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -30,32 +28,11 @@ func usersHandler(c *gin.Context) {
 	processUser(c.Request.Context(), &input)
 
 	if err := persistUser(c.Request.Context(), input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": "created"})
-}
-
-func decodeInput(ctx context.Context, req *http.Request) (UserInput, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "decodeInput")
-	defer span.Finish()
-
-	userInput := UserInput{}
-	if err := json.NewDecoder(req.Body).Decode(&userInput); err != nil {
-		span.LogFields(
-			traceLog.Error(err),
-		)
-		span.SetTag("status", "error")
-		return userInput, err
-	}
-
-	span.LogFields(
-		traceLog.String("event", "userDecoded"),
-		traceLog.String("value", fmt.Sprintf("%+v", userInput)),
-	)
-
-	return userInput, nil
 }
 
 func processUser(ctx context.Context, user *UserInput) {
