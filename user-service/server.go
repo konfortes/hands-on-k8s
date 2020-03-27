@@ -60,9 +60,6 @@ func setMiddlewares(router *gin.Engine) {
 	for _, middleware := range customMiddlewares {
 		router.Use(middleware)
 	}
-
-	router.Use(gin.Logger())
-	router.Use(gin.Recovery())
 }
 
 func setRoutes(router *gin.Engine) {
