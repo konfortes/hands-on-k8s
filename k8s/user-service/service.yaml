@@ -3,6 +3,8 @@ kind: Service
 metadata:
   name: hands-on-user-service
   namespace: handson
+  labels:
+    app: hands-on-user-service
 spec:
   selector:
     app: hands-on-user-service

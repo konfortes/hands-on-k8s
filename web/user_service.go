@@ -10,6 +10,7 @@ import (
 	"time"
 
 	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
 	traceLog "github.com/opentracing/opentracing-go/log"
 )
 
@@ -47,6 +48,10 @@ func (us UserService) CreateUser(ctx context.Context, user UserInput) error {
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{Timeout: time.Second * 10}
+	// recommended opentracing semantic conventions tags
+	ext.SpanKindRPCClient.Set(span)
+	ext.HTTPUrl.Set(span, url)
+	ext.HTTPMethod.Set(span, "POST")
 	opentracing.GlobalTracer().Inject(
 		span.Context(),
 		opentracing.HTTPHeaders,

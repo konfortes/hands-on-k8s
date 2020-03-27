@@ -20,3 +20,8 @@ kubectl -n handson create -f k8s/user-service
 echo "deploying nginx ingress controller"
 # kubectl apply -f k8s/shared/nginx-ingress/mandatory.yaml
 # kubectl apply -f k8s/shared/nginx-ingress/service.yaml
+
+# kubectl create -f k8s/shared/kube-prometheus/manifests/setup
+# until kubectl get servicemonitors --all-namespaces ; do date; sleep 1; echo ""; done
+# kubectl create -f k8s/shared/kube-prometheus/manifests/
+

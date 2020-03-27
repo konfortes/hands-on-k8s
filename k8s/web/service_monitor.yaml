@@ -1,0 +1,16 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: hands-on-web
+  labels:
+    app: hands-on-web
+    prometheus: k8s
+spec:
+  endpoints:
+  - port: http
+    path: '/metrics'
+  namespaceSelector:
+    any: true
+  selector:
+    matchLabels:
+      app: hands-on-web

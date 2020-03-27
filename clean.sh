@@ -12,3 +12,5 @@ kubectl -n handson delete -f k8s/user-service
 
 # kubectl delete -f k8s/shared/nginx-ingress/mandatory.yaml
 # kubectl delete -f k8s/shared/nginx-ingress/service.yaml
+
+# kubectl delete --ignore-not-found=true -f k8s/shared/kube-prometheus/manifests/ -f k8s/shared/kube-prometheus/manifests/setup

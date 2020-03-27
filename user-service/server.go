@@ -12,6 +12,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	opentracing "github.com/opentracing/opentracing-go"
+	ginprometheus "github.com/zsais/go-gin-prometheus"
 )
 
 var (
@@ -27,6 +28,9 @@ func main() {
 	router := gin.Default()
 
 	setMiddlewares(router)
+	// TODO: integrate with setMiddlewares
+	p := ginprometheus.NewPrometheus("hands-on-web")
+	p.Use(router)
 	setRoutes(router)
 
 	srv := &http.Server{
