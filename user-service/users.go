@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"math/rand"
 	"net/http"
 	"time"
 
@@ -36,7 +37,9 @@ func saveUser(ctx context.Context, user UserInput) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "saveUser")
 	defer span.Finish()
 
-	time.Sleep(time.Millisecond * 1000)
+	rand.Seed(time.Now().UnixNano())
+	n := rand.Intn(1000)
+	time.Sleep(time.Duration(n) * time.Millisecond)
 
 	return nil
 }
