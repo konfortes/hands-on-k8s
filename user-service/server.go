@@ -1,25 +1,20 @@
 package main
 
 import (
-	"context"
-	"io"
 	"log"
 	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/konfortes/go-server-utils/serverutils"
 	opentracing "github.com/opentracing/opentracing-go"
-	ginprometheus "github.com/zsais/go-gin-prometheus"
 )
 
 var (
-	tracer            opentracing.Tracer
-	tracerCloser      io.Closer
-	shutdownHooks     []func()
-	customMiddlewares []gin.HandlerFunc
+	tracer *opentracing.Tracer
+)
+
+const (
+	serviceName = "hands-on-k8s-user-service"
 )
 
 func main() {
@@ -27,14 +22,12 @@ func main() {
 
 	router := gin.Default()
 
-	setMiddlewares(router)
-	// TODO: integrate with setMiddlewares
-	p := ginprometheus.NewPrometheus("hands-on-web")
-	p.Use(router)
+	serverutils.SetMiddlewares(router, tracer)
+	serverutils.SetRoutes(router, serviceName)
 	setRoutes(router)
 
 	srv := &http.Server{
-		Addr:    ":" + getEnvOr("PORT", "4432"),
+		Addr:    ":" + serverutils.GetEnvOr("PORT", "4431"),
 		Handler: router,
 	}
 
@@ -45,57 +38,15 @@ func main() {
 		}
 	}()
 
-	gracefulShutdown(srv)
+	serverutils.GracefulShutdown(srv)
 }
 
 func initialize() {
-	if isTracingEnabled() {
-		initJaeger("hands-on-k8s-user-service")
-		customMiddlewares = append(customMiddlewares, jaegerMiddleware)
-	}
-}
-
-func setMiddlewares(router *gin.Engine) {
-	// TODO: add jaegerMiddleware only to relevant routes
-	for _, middleware := range customMiddlewares {
-		router.Use(middleware)
+	if serverutils.GetEnvOr("TRACING_ENABLED", "false") == "true" {
+		tracer = serverutils.InitJaeger(serviceName)
 	}
 }
 
 func setRoutes(router *gin.Engine) {
-	// http localhost:8080/health
-	router.GET("/health", func(c *gin.Context) {
-		c.Data(http.StatusOK, "application/json", []byte("OK"))
-	})
-
 	router.POST("/users", usersHandler)
-}
-
-func getEnvOr(env, ifNotFound string) string {
-	foundEnv, found := os.LookupEnv(env)
-
-	if found {
-		return foundEnv
-	}
-
-	return ifNotFound
-}
-
-func gracefulShutdown(srv *http.Server) {
-	quit := make(chan os.Signal)
-
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-	log.Println("Shuting down server...")
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	for _, hook := range shutdownHooks {
-		hook()
-	}
-	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatal("Server forced to shutdown:", err)
-	}
-
-	log.Println("Server exiting")
 }
