@@ -23,7 +23,7 @@ func main() {
 
 	router := gin.Default()
 
-	serverutils.SetMiddlewares(router, tracer)
+	serverutils.SetMiddlewares(router, tracer, serviceName)
 	serverutils.SetRoutes(router, serviceName)
 	setRoutes(router)
 
