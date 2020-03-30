@@ -14,13 +14,17 @@ var (
 	userService UserService
 )
 
+const (
+	serviceName = "hands-on-k8s-web"
+)
+
 func main() {
 	initialize()
 
 	router := gin.Default()
 
 	serverutils.SetMiddlewares(router, tracer)
-	serverutils.SetMonitoringHandler(router)
+	serverutils.SetRoutes(router, serviceName)
 	setRoutes(router)
 
 	srv := &http.Server{
@@ -45,15 +49,10 @@ func initialize() {
 	}
 
 	if serverutils.GetEnvOr("TRACING_ENABLED", "false") == "true" {
-		tracer = serverutils.InitJaeger("hands-on-k8s-web")
+		tracer = serverutils.InitJaeger(serviceName)
 	}
 }
 
 func setRoutes(router *gin.Engine) {
-	// http localhost:8080/health
-	router.GET("/health", func(c *gin.Context) {
-		c.Data(http.StatusOK, "application/json", []byte("OK"))
-	})
-
 	router.POST("/users", usersHandler)
 }
