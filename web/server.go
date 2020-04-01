@@ -4,8 +4,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
-	"github.com/konfortes/go-server-utils/serverutils"
+	"github.com/konfortes/go-server-utils/server"
+	"github.com/konfortes/go-server-utils/utils"
 	opentracing "github.com/opentracing/opentracing-go"
 )
 
@@ -15,22 +15,21 @@ var (
 )
 
 const (
-	serviceName = "hands-on-k8s-web"
+	appName = "hands-on-k8s-web"
 )
 
 func main() {
 	initialize()
 
-	router := gin.Default()
-
-	serverutils.SetMiddlewares(router, tracer, serviceName)
-	serverutils.SetRoutes(router, serviceName)
-	setRoutes(router)
-
-	srv := &http.Server{
-		Addr:    ":" + serverutils.GetEnvOr("PORT", "4431"),
-		Handler: router,
+	serverConfig := server.Config{
+		AppName:     "my-app-name",
+		Port:        utils.GetEnvOr("PORT", "4431"),
+		Env:         utils.GetEnvOr("ENV", "development"),
+		Handlers:    handlers(),
+		WithTracing: utils.GetEnvOr("TRACING_ENABLED", "false") == "true",
 	}
+
+	srv := server.Initialize(serverConfig)
 
 	go func() {
 		log.Println("listening on " + srv.Addr)
@@ -39,20 +38,23 @@ func main() {
 		}
 	}()
 
-	serverutils.GracefulShutdown(srv)
+	server.GracefulShutdown(srv)
 }
 
 func initialize() {
 	userService = UserService{
-		Host: serverutils.GetEnvOr("HANDS_ON_USER_SERVICE_SERVICE_HOST", "hands-on-user-service"),
-		Port: serverutils.GetEnvOr("HANDS_ON_USER_SERVICE_SERVICE_PORT", "4432"),
-	}
-
-	if serverutils.GetEnvOr("TRACING_ENABLED", "false") == "true" {
-		tracer = serverutils.InitJaeger(serviceName)
+		Host: utils.GetEnvOr("HANDS_ON_USER_SERVICE_SERVICE_HOST", "hands-on-user-service"),
+		Port: utils.GetEnvOr("HANDS_ON_USER_SERVICE_SERVICE_PORT", "4432"),
 	}
 }
 
-func setRoutes(router *gin.Engine) {
-	router.POST("/users", usersHandler)
+func handlers() []server.Handler {
+	return []server.Handler{
+		{
+			// http POST localhost:4431/users first_name='Ronen' last_name='Konfortes' email='konfortes@gmail.com'
+			Method:  http.MethodPost,
+			Pattern: "/users",
+			H:       usersHandler,
+		},
+	}
 }

@@ -4,8 +4,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
-	"github.com/konfortes/go-server-utils/serverutils"
+	"github.com/konfortes/go-server-utils/server"
+	"github.com/konfortes/go-server-utils/utils"
 	opentracing "github.com/opentracing/opentracing-go"
 )
 
@@ -18,18 +18,15 @@ const (
 )
 
 func main() {
-	initialize()
-
-	router := gin.Default()
-
-	serverutils.SetMiddlewares(router, tracer, serviceName)
-	serverutils.SetRoutes(router, serviceName)
-	setRoutes(router)
-
-	srv := &http.Server{
-		Addr:    ":" + serverutils.GetEnvOr("PORT", "4431"),
-		Handler: router,
+	serverConfig := server.Config{
+		AppName:     "my-app-name",
+		Port:        utils.GetEnvOr("PORT", "4432"),
+		Env:         utils.GetEnvOr("ENV", "development"),
+		Handlers:    handlers(),
+		WithTracing: utils.GetEnvOr("TRACING_ENABLED", "false") == "true",
 	}
+
+	srv := server.Initialize(serverConfig)
 
 	go func() {
 		log.Println("listening on " + srv.Addr)
@@ -38,15 +35,15 @@ func main() {
 		}
 	}()
 
-	serverutils.GracefulShutdown(srv)
+	server.GracefulShutdown(srv)
 }
 
-func initialize() {
-	if serverutils.GetEnvOr("TRACING_ENABLED", "false") == "true" {
-		tracer = serverutils.InitJaeger(serviceName)
+func handlers() []server.Handler {
+	return []server.Handler{
+		{
+			Method:  http.MethodPost,
+			Pattern: "/users",
+			H:       usersHandler,
+		},
 	}
-}
-
-func setRoutes(router *gin.Engine) {
-	router.POST("/users", usersHandler)
 }
