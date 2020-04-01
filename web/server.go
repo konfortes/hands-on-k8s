@@ -22,7 +22,7 @@ func main() {
 	initialize()
 
 	serverConfig := server.Config{
-		AppName:     "my-app-name",
+		AppName:     appName,
 		Port:        utils.GetEnvOr("PORT", "4431"),
 		Env:         utils.GetEnvOr("ENV", "development"),
 		Handlers:    handlers(),

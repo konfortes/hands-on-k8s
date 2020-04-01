@@ -14,12 +14,12 @@ var (
 )
 
 const (
-	serviceName = "hands-on-k8s-user-service"
+	appName = "hands-on-k8s-user-service"
 )
 
 func main() {
 	serverConfig := server.Config{
-		AppName:     "my-app-name",
+		AppName:     appName,
 		Port:        utils.GetEnvOr("PORT", "4432"),
 		Env:         utils.GetEnvOr("ENV", "development"),
 		Handlers:    handlers(),
