@@ -6,11 +6,9 @@ import (
 
 	"github.com/konfortes/go-server-utils/server"
 	"github.com/konfortes/go-server-utils/utils"
-	opentracing "github.com/opentracing/opentracing-go"
 )
 
 var (
-	tracer      *opentracing.Tracer
 	userService UserService
 )
 

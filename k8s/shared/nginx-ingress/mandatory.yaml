@@ -12,10 +12,11 @@ kind: ConfigMap
 apiVersion: v1
 data:
   enable-opentracing: "true"
+  # TODO: need to figure out how to solve it
   # to get the collector (agent) host:
   # kubectl run --generator=run-pod/v1 --rm utils -it --image eddiehale/utils bash
   # $ nslookup simplest-agent
-  jaeger-collector-host: 10.1.1.223
+  jaeger-collector-host: 10.1.2.145
   jaeger-sampler-type: const
   jaeger-sampler-param: "1"
 metadata:

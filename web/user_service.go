@@ -27,24 +27,17 @@ func (us UserService) CreateUser(ctx context.Context, user UserInput) error {
 
 	requestBody, err := json.Marshal(user)
 	if err != nil {
+		span.SetTag("error", true)
 		span.LogFields(
-			traceLog.Error(err),
+			traceLog.String("event", "error"),
+			traceLog.String("message", err.Error()),
 		)
-		span.SetTag("status", "error")
 		return err
 	}
 
 	url := fmt.Sprintf("http://%s:%s/users", us.Host, us.Port)
 
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(requestBody))
-	if err != nil {
-		span.LogFields(
-			traceLog.Error(err),
-		)
-		span.SetTag("status", "error")
-		return err
-	}
-
+	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(requestBody))
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{Timeout: time.Second * 10}
@@ -52,6 +45,7 @@ func (us UserService) CreateUser(ctx context.Context, user UserInput) error {
 	ext.SpanKindRPCClient.Set(span)
 	ext.HTTPUrl.Set(span, url)
 	ext.HTTPMethod.Set(span, "POST")
+
 	opentracing.GlobalTracer().Inject(
 		span.Context(),
 		opentracing.HTTPHeaders,
@@ -60,10 +54,11 @@ func (us UserService) CreateUser(ctx context.Context, user UserInput) error {
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Fatal("Error reading response. ", err)
+		span.SetTag("error", true)
 		span.LogFields(
-			traceLog.Error(err),
+			traceLog.String("event", "error"),
+			traceLog.String("message", err.Error()),
 		)
-		span.SetTag("status", "error")
 		return err
 	}
 
@@ -72,8 +67,10 @@ func (us UserService) CreateUser(ctx context.Context, user UserInput) error {
 	)
 
 	if resp.StatusCode > 400 {
+		span.SetTag("error", true)
 		span.LogFields(
-			traceLog.String("responseError", resp.Status),
+			traceLog.String("event", "error"),
+			traceLog.Int("http.response_code", resp.StatusCode),
 		)
 	}
 
