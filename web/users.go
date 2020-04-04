@@ -66,16 +66,15 @@ func processUser(ctx context.Context, user *UserInput) {
 }
 
 func persistUser(ctx context.Context, user UserInput) error {
-	span, persistCtx := opentracing.StartSpanFromContext(ctx, "persistUser")
-	defer span.Finish()
 
-	err := userService.CreateUser(persistCtx, user)
-	if err != nil {
+	if err := userService.CreateUser(ctx, user); err != nil {
+		span := opentracing.SpanFromContext(ctx)
 		span.SetTag("error", true)
 		span.LogFields(
 			traceLog.String("event", "error"),
 			traceLog.String("message", err.Error()),
 		)
+		return err
 	}
-	return err
+	return nil
 }

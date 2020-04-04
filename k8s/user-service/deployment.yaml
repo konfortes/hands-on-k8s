@@ -21,6 +21,8 @@ spec:
           value: "4432"
         - name: TRACING_ENABLED
           value: "true"
+        - name: ENV
+          value: production
         image: hands-on-k8s-user-service:latest
         imagePullPolicy: Never
         resources:

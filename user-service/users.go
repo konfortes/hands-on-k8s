@@ -48,8 +48,8 @@ func saveUser(ctx context.Context, user UserInput) error {
 	n := rand.Intn(1000)
 	time.Sleep(time.Duration(n) * time.Millisecond)
 
-	// randomally return error
-	if n > 800 {
+	// 10% error
+	if n > 900 {
 		span.SetTag("error", true)
 		span.LogFields(
 			traceLog.String("event", "error"),
