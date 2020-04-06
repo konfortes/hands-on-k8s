@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/konfortes/go-server-utils/tracing"
 	opentracing "github.com/opentracing/opentracing-go"
-	traceLog "github.com/opentracing/opentracing-go/log"
 )
 
 // UserInput ...
@@ -23,15 +23,13 @@ func usersHandler(c *gin.Context) {
 	var input UserInput
 	if err := c.BindJSON(&input); err != nil {
 		span := opentracing.SpanFromContext(c)
-		span.SetTag("error", true)
-		span.LogFields(
-			traceLog.String("event", "error"),
-			traceLog.String("message", err.Error()),
-		)
+		tracing.Error(span, err)
 		return
 	}
 
 	if err := saveUser(c.Request.Context(), input); err != nil {
+		span := opentracing.SpanFromContext(c)
+		tracing.Error(span, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -50,11 +48,7 @@ func saveUser(ctx context.Context, user UserInput) error {
 
 	// 10% error
 	if n > 900 {
-		span.SetTag("error", true)
-		span.LogFields(
-			traceLog.String("event", "error"),
-			traceLog.String("message", "just a random error while saving user"),
-		)
+		tracing.Error(span, errors.New("just a random error while saving user"))
 		return errors.New("error saving user")
 	}
 	return nil

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/konfortes/go-server-utils/tracing"
 	opentracing "github.com/opentracing/opentracing-go"
 	traceLog "github.com/opentracing/opentracing-go/log"
 )
@@ -23,11 +24,7 @@ func usersHandler(c *gin.Context) {
 	var input UserInput
 	if err := c.BindJSON(&input); err != nil {
 		span := opentracing.SpanFromContext(c.Request.Context())
-		span.SetTag("error", true)
-		span.LogFields(
-			traceLog.String("event", "error"),
-			traceLog.String("message", err.Error()),
-		)
+		tracing.Error(span, err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -69,11 +66,7 @@ func persistUser(ctx context.Context, user UserInput) error {
 
 	if err := userService.CreateUser(ctx, user); err != nil {
 		span := opentracing.SpanFromContext(ctx)
-		span.SetTag("error", true)
-		span.LogFields(
-			traceLog.String("event", "error"),
-			traceLog.String("message", err.Error()),
-		)
+		tracing.Error(span, err)
 		return err
 	}
 	return nil

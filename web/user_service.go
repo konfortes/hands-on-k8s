@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/konfortes/go-server-utils/tracing"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
 	traceLog "github.com/opentracing/opentracing-go/log"
@@ -27,11 +28,7 @@ func (us UserService) CreateUser(ctx context.Context, user UserInput) error {
 
 	requestBody, err := json.Marshal(user)
 	if err != nil {
-		span.SetTag("error", true)
-		span.LogFields(
-			traceLog.String("event", "error"),
-			traceLog.String("message", err.Error()),
-		)
+		tracing.Error(span, err)
 		return err
 	}
 
@@ -54,11 +51,7 @@ func (us UserService) CreateUser(ctx context.Context, user UserInput) error {
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Fatal("Error reading response. ", err)
-		span.SetTag("error", true)
-		span.LogFields(
-			traceLog.String("event", "error"),
-			traceLog.String("message", err.Error()),
-		)
+		tracing.Error(span, err)
 		return err
 	}
 
@@ -72,6 +65,7 @@ func (us UserService) CreateUser(ctx context.Context, user UserInput) error {
 			traceLog.String("event", "error"),
 			traceLog.Int("http.response_code", resp.StatusCode),
 		)
+		return fmt.Errorf("got %d from user-service", resp.StatusCode)
 	}
 
 	return nil
