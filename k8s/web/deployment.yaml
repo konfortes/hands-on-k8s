@@ -6,6 +6,7 @@ metadata:
   annotations:
     "sidecar.jaegertracing.io/inject": simplest
 spec:
+  replicas: 3
   selector:
     matchLabels:
       app: hands-on-web
