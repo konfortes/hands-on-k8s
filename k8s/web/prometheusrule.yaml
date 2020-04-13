@@ -1,0 +1,25 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: k8s
+    role: alert-rules
+  name: hands-on-k8s-rules
+  namespace: monitoring
+spec:
+  groups:
+  - name: hands-on-k8s
+    rules:
+    - record: hands_on_k8s:error_rate:5m
+      expr: |
+        (sum without(status)(rate(request_duration_seconds_count{job="hands-on-web", path="/users", status=~"5.."}[5m])) / 
+        sum without(status)(rate(request_duration_seconds_count{job="hands-on-web", path="/users"}[5m])))
+    - alert: HandsOnK8SWebErrorRate
+      expr: avg(hands_on_k8s:error_rate:5m) by (job) > 0.20
+      for: 1s
+      labels:
+        severity: critical
+      annotations:
+        summary: "{{ $labels.job }} has high error rate"
+        description: "{{ $labels.job }} has {{ $value }} error rate"
+    

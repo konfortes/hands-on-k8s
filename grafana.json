@@ -16,7 +16,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": 25,
-  "iteration": 1586672321295,
+  "iteration": 1586787403614,
   "links": [],
   "panels": [
     {
@@ -147,8 +147,8 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "1000 * (rate(request_duration_seconds_sum{path=\"/users\", status=\"200\", job=\"$service\"}[5m]) / rate(request_duration_seconds_count{path=\"/users\", status=\"200\", job=\"$service\"}[5m]))",
-          "legendFormat": "{{pod}}",
+          "expr": "1000 * (sum without(status)(rate(request_duration_seconds_sum{path=\"/users\", job=\"$service\"}[5m])) / sum without (status)(rate(request_duration_seconds_count{path=\"/users\", job=\"$service\"}[5m])))",
+          "legendFormat": "",
           "refId": "A"
         }
       ],
@@ -218,8 +218,12 @@
                   "value": null
                 },
                 {
+                  "color": "#EAB839",
+                  "value": 50
+                },
+                {
                   "color": "red",
-                  "value": 80
+                  "value": 200
                 }
               ]
             }
@@ -285,7 +289,8 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "100 * sum(rate(request_duration_seconds_count{path=\"/users\", status=\"500\", job=\"hands-on-web\"}[5m])) / sum(rate(request_duration_seconds_count{path=\"/users\", job=\"hands-on-web\"}[5m]))",
+          "expr": "100 * sum without(status)(rate(request_duration_seconds_count{path=\"/users\", job=\"$service\", status=~\"5..\"}[5m])) / sum without(status)(rate(request_duration_seconds_count{path=\"/users\", job=\"$service\"}[5m]))",
+          "legendFormat": "{{pod}}",
           "refId": "A"
         }
       ],
@@ -442,5 +447,5 @@
   "timezone": "",
   "title": "Hands On K8S",
   "uid": "iK9fgUCZk",
-  "version": 12
+  "version": 17
 }
